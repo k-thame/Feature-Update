@@ -53,6 +53,8 @@
             this.btnViewHistory = new System.Windows.Forms.Button();
             this.btnShopForTheCustomer = new System.Windows.Forms.Button();
             this.btnMyProfile = new System.Windows.Forms.Button();
+            this.btnReorderRequests = new System.Windows.Forms.Button();
+            this.lblReorderRequests = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgvInventory)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRestock)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRemoveFromStock)).BeginInit();
@@ -291,12 +293,32 @@
             this.btnMyProfile.Text = "My Profile";
             this.btnMyProfile.UseVisualStyleBackColor = true;
             this.btnMyProfile.Click += new System.EventHandler(this.btnMyProfile_Click);
-            // 
+            //
+            // lblReorderRequests
+            //
+            this.lblReorderRequests.AutoSize = true;
+            this.lblReorderRequests.Location = new System.Drawing.Point(1152, 625);
+            this.lblReorderRequests.Name = "lblReorderRequests";
+            this.lblReorderRequests.Size = new System.Drawing.Size(114, 13);
+            this.lblReorderRequests.Text = "Customer Reorders";
+            //
+            // btnReorderRequests
+            //
+            this.btnReorderRequests.Location = new System.Drawing.Point(1158, 641);
+            this.btnReorderRequests.Name = "btnReorderRequests";
+            this.btnReorderRequests.Size = new System.Drawing.Size(102, 23);
+            this.btnReorderRequests.TabIndex = 24;
+            this.btnReorderRequests.Text = "Reorder Requests";
+            this.btnReorderRequests.UseVisualStyleBackColor = true;
+            this.btnReorderRequests.Click += new System.EventHandler(this.btnReorderRequests_Click);
+            //
             // frmManaging
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1313, 717);
+            this.Controls.Add(this.btnReorderRequests);
+            this.Controls.Add(this.lblReorderRequests);
             this.Controls.Add(this.btnMyProfile);
             this.Controls.Add(this.btnShopForTheCustomer);
             this.Controls.Add(this.btnViewHistory);
@@ -360,5 +382,7 @@
         private System.Windows.Forms.Button btnViewHistory;
         private System.Windows.Forms.Button btnShopForTheCustomer;
         private System.Windows.Forms.Button btnMyProfile;
+        private System.Windows.Forms.Button btnReorderRequests;
+        private System.Windows.Forms.Label lblReorderRequests;
     }
 }

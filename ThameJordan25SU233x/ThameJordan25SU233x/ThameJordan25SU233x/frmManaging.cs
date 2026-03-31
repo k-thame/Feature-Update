@@ -450,6 +450,7 @@ namespace ThameJordan25SU233x
                 "• **Select Customer / Start Shopping!** – Choose a customer and launch the POS.\n" +
                 "• **View Sales History** – Review past orders.\n" +
                 "• **My Profile** – View or edit your profile.\n" +
+                "• **Reorder Requests** – View and process customer reorder requests.\n" +
                 "• **Help / Exit** – Get help or leave the screen.\n\n" +
                 "Tips:\n" +
                 "- Always select the correct row before restocking or removing stock.\n" +
@@ -504,6 +505,25 @@ namespace ThameJordan25SU233x
             var lbl = this.Controls.Find("lblManagerName", true).FirstOrDefault() as Label;
             if (lbl != null && !string.IsNullOrWhiteSpace(lbl.Text)) return lbl.Text.Trim();
             return "";
+        }
+
+        // Open the reorder requests management form
+        private void btnReorderRequests_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            try
+            {
+                using (var reorderForm = new frmReorderRequests())
+                {
+                    reorderForm.StartPosition = FormStartPosition.CenterParent;
+                    reorderForm.ShowDialog(this);
+                }
+            }
+            finally
+            {
+                this.Show();
+                this.Activate();
+            }
         }
 
         private void btnMyProfile_Click(object sender, EventArgs e)

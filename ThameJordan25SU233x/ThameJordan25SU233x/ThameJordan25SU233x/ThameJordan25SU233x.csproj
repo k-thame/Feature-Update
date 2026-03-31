@@ -90,6 +90,18 @@
     <Compile Include="frmDiscounts.Designer.cs">
       <DependentUpon>frmDiscounts.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmFavorites.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmFavorites.Designer.cs">
+      <DependentUpon>frmFavorites.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmReorderRequests.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmReorderRequests.Designer.cs">
+      <DependentUpon>frmReorderRequests.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmManaging.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -158,6 +158,39 @@ CREATE TABLE IF NOT EXISTS OrderDetails (
     DiscountID    INTEGER REFERENCES Discounts(DiscountID)
 );
 
+-- ------------------------------------------------------------
+-- 10. Favorites  (saved items per customer)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS Favorites (
+    FavoriteID  INTEGER PRIMARY KEY AUTOINCREMENT,
+    PersonID    INTEGER NOT NULL REFERENCES Person(PersonID),
+    InventoryID INTEGER NOT NULL REFERENCES Inventory(InventoryID),
+    DateAdded   TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(PersonID, InventoryID)
+);
+
+-- ------------------------------------------------------------
+-- 11. ReorderRequests  (customer reorder requests)
+--     Status: 0 = Pending, 1 = Fulfilled, 2 = Cancelled
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ReorderRequests (
+    RequestID   INTEGER PRIMARY KEY AUTOINCREMENT,
+    PersonID    INTEGER NOT NULL REFERENCES Person(PersonID),
+    RequestDate TEXT    NOT NULL DEFAULT (datetime('now')),
+    Status      INTEGER NOT NULL DEFAULT 0,
+    Notes       TEXT
+);
+
+-- ------------------------------------------------------------
+-- 12. ReorderRequestItems  (line items for each reorder request)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ReorderRequestItems (
+    RequestItemID INTEGER PRIMARY KEY AUTOINCREMENT,
+    RequestID     INTEGER NOT NULL REFERENCES ReorderRequests(RequestID),
+    InventoryID   INTEGER NOT NULL REFERENCES Inventory(InventoryID),
+    Quantity      INTEGER NOT NULL DEFAULT 1
+);
+
 -- ============================================================
 --  End of schema
 -- ============================================================
