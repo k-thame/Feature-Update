@@ -1530,6 +1530,225 @@ namespace ThameJordan25SU233x
                 return LoadImagesIntoTable(cn, dt);
             }
         }
+
+        // --- FAVORITES ---
+
+        // Saves an item to the customer's favorites list
+        public static bool AddFavorite(int personID, int inventoryID)
+        {
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
+                {
+                    cmd.CommandText = "INSERT OR IGNORE INTO Favorites (PersonID, InventoryID) VALUES (@PersonID, @InventoryID)";
+                    cmd.Parameters.AddWithValue("@PersonID", personID);
+                    cmd.Parameters.AddWithValue("@InventoryID", inventoryID);
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+            catch (Exception ex) { MessageBox.Show("Error adding favorite:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return false; }
+        }
+
+        // Removes an item from the customer's favorites list
+        public static bool RemoveFavorite(int personID, int inventoryID)
+        {
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
+                {
+                    cmd.CommandText = "DELETE FROM Favorites WHERE PersonID = @PersonID AND InventoryID = @InventoryID";
+                    cmd.Parameters.AddWithValue("@PersonID", personID);
+                    cmd.Parameters.AddWithValue("@InventoryID", inventoryID);
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+            catch { return false; }
+        }
+
+        // Returns true if the item is already in the customer's favorites
+        public static bool IsFavorite(int personID, int inventoryID)
+        {
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT COUNT(*) FROM Favorites WHERE PersonID = @PersonID AND InventoryID = @InventoryID";
+                    cmd.Parameters.AddWithValue("@PersonID", personID);
+                    cmd.Parameters.AddWithValue("@InventoryID", inventoryID);
+                    return (long)cmd.ExecuteScalar() > 0;
+                }
+            }
+            catch { return false; }
+        }
+
+        // Returns the customer's favorite items with stock and price info
+        public static DataTable GetFavorites(int personID)
+        {
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT f.FavoriteID, i.InventoryID, i.ItemName,
+                               printf('$%.2f', i.RetailPrice) AS Price,
+                               i.Quantity AS InStock,
+                               CASE WHEN i.Discontinued = 1 THEN 'Discontinued'
+                                    WHEN i.Quantity = 0 THEN 'Out of Stock'
+                                    ELSE 'Available' END AS Availability,
+                               f.DateAdded
+                        FROM Favorites f
+                        JOIN Inventory i ON i.InventoryID = f.InventoryID
+                        WHERE f.PersonID = @PersonID
+                        ORDER BY f.DateAdded DESC";
+                    cmd.Parameters.AddWithValue("@PersonID", personID);
+                    return FillDataTable(cmd);
+                }
+            }
+            catch (Exception ex) { MessageBox.Show("Error loading favorites:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return new DataTable(); }
+        }
+
+        // --- REORDER REQUESTS ---
+
+        // Submits a new reorder request with one or more items
+        public static bool SubmitReorderRequest(int personID, List<(int inventoryID, int quantity)> items, string notes)
+        {
+            if (items == null || items.Count == 0) return false;
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var tx = cn.BeginTransaction())
+                {
+                    long requestID;
+                    using (var cmd = cn.CreateCommand())
+                    {
+                        cmd.Transaction = tx;
+                        cmd.CommandText = "INSERT INTO ReorderRequests (PersonID, Notes) VALUES (@PersonID, @Notes); SELECT last_insert_rowid();";
+                        cmd.Parameters.AddWithValue("@PersonID", personID);
+                        cmd.Parameters.AddWithValue("@Notes", notes ?? "");
+                        requestID = (long)cmd.ExecuteScalar();
+                    }
+                    foreach (var item in items)
+                    {
+                        using (var cmd = cn.CreateCommand())
+                        {
+                            cmd.Transaction = tx;
+                            cmd.CommandText = "INSERT INTO ReorderRequestItems (RequestID, InventoryID, Quantity) VALUES (@RequestID, @InventoryID, @Quantity)";
+                            cmd.Parameters.AddWithValue("@RequestID", requestID);
+                            cmd.Parameters.AddWithValue("@InventoryID", item.inventoryID);
+                            cmd.Parameters.AddWithValue("@Quantity", item.quantity);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    tx.Commit();
+                    return true;
+                }
+            }
+            catch (Exception ex) { MessageBox.Show("Error submitting reorder request:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return false; }
+        }
+
+        // Returns all reorder requests visible to the manager
+        public static DataTable GetAllReorderRequests()
+        {
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT r.RequestID,
+                               (p.NameFirst || ' ' || p.NameLast) AS CustomerName,
+                               r.RequestDate,
+                               CASE r.Status
+                                   WHEN 0 THEN 'Pending'
+                                   WHEN 1 THEN 'Fulfilled'
+                                   ELSE 'Cancelled'
+                               END AS Status,
+                               r.Notes,
+                               COUNT(ri.RequestItemID) AS ItemCount
+                        FROM ReorderRequests r
+                        JOIN Person p ON p.PersonID = r.PersonID
+                        LEFT JOIN ReorderRequestItems ri ON ri.RequestID = r.RequestID
+                        GROUP BY r.RequestID
+                        ORDER BY r.Status ASC, r.RequestDate DESC";
+                    return FillDataTable(cmd);
+                }
+            }
+            catch (Exception ex) { MessageBox.Show("Error loading reorder requests:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return new DataTable(); }
+        }
+
+        // Returns the line items for a specific reorder request
+        public static DataTable GetReorderRequestItems(int requestID)
+        {
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT i.ItemName,
+                               ri.Quantity AS RequestedQty,
+                               printf('$%.2f', i.RetailPrice) AS UnitPrice,
+                               i.Quantity AS InStock
+                        FROM ReorderRequestItems ri
+                        JOIN Inventory i ON i.InventoryID = ri.InventoryID
+                        WHERE ri.RequestID = @RequestID";
+                    cmd.Parameters.AddWithValue("@RequestID", requestID);
+                    return FillDataTable(cmd);
+                }
+            }
+            catch (Exception ex) { MessageBox.Show("Error loading request items:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return new DataTable(); }
+        }
+
+        // Sets a reorder request's status (0=Pending, 1=Fulfilled, 2=Cancelled)
+        public static bool UpdateReorderRequestStatus(int requestID, int status)
+        {
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
+                {
+                    cmd.CommandText = "UPDATE ReorderRequests SET Status = @Status WHERE RequestID = @RequestID";
+                    cmd.Parameters.AddWithValue("@Status", status);
+                    cmd.Parameters.AddWithValue("@RequestID", requestID);
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+            catch { return false; }
+        }
+
+        // Returns reorder request history for a specific customer
+        public static DataTable GetReorderRequestsForCustomer(int personID)
+        {
+            try
+            {
+                using (var cn = GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT r.RequestID,
+                               r.RequestDate,
+                               CASE r.Status
+                                   WHEN 0 THEN 'Pending'
+                                   WHEN 1 THEN 'Fulfilled'
+                                   ELSE 'Cancelled'
+                               END AS Status,
+                               r.Notes,
+                               COUNT(ri.RequestItemID) AS ItemCount
+                        FROM ReorderRequests r
+                        LEFT JOIN ReorderRequestItems ri ON ri.RequestID = r.RequestID
+                        WHERE r.PersonID = @PersonID
+                        GROUP BY r.RequestID
+                        ORDER BY r.RequestDate DESC";
+                    cmd.Parameters.AddWithValue("@PersonID", personID);
+                    return FillDataTable(cmd);
+                }
+            }
+            catch (Exception ex) { MessageBox.Show("Error loading your requests:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return new DataTable(); }
+        }
     }
 
     // Holds discount info for a single cart item

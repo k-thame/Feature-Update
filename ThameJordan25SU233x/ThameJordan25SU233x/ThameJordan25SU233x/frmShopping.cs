@@ -485,6 +485,76 @@ namespace ThameJordan25SU233x
             }
         }
 
+        // Save the currently selected product to the customer's favorites
+        private void btnAddToFavorites_Click(object sender, EventArgs e)
+        {
+            if (dgvItems.CurrentRow == null)
+            {
+                MessageBox.Show("Please select a product to save to your favorites.", "No Selection",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!int.TryParse(_personID, out int personID))
+            {
+                MessageBox.Show("Your account could not be verified. Please re-login.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            int inventoryID = Convert.ToInt32(dgvItems.CurrentRow.Cells["InventoryID"].Value);
+            string itemName = dgvItems.CurrentRow.Cells["ItemName"].Value?.ToString() ?? "";
+
+            if (clsSQL.IsFavorite(personID, inventoryID))
+            {
+                MessageBox.Show($"\"{itemName}\" is already in your saved items.", "Already Saved",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (clsSQL.AddFavorite(personID, inventoryID))
+                MessageBox.Show($"\"{itemName}\" has been saved to your favorites.", "Saved",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            else
+                MessageBox.Show("Could not save the item. Please try again.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        // Open the customer's saved items (favorites) form
+        private void btnMyFavorites_Click(object sender, EventArgs e)
+        {
+            if (!int.TryParse(_personID, out int personID))
+            {
+                MessageBox.Show("Your account could not be verified. Please re-login.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            using (var favForm = new frmFavorites(personID))
+            {
+                favForm.StartPosition = FormStartPosition.CenterParent;
+                DialogResult result = favForm.ShowDialog(this);
+
+                if (result == DialogResult.OK && favForm.ItemsToAddToCart.Count > 0)
+                {
+                    foreach (var item in favForm.ItemsToAddToCart)
+                    {
+                        var existing = _itemsInCart.Find(x => x.ItemID == item.ItemID);
+                        if (existing != null)
+                            existing.Quantity += item.Quantity;
+                        else
+                            _itemsInCart.Add(item);
+                    }
+                    lbxCart.Items.Clear();
+                    foreach (var cartItem in _itemsInCart)
+                        lbxCart.Items.Add($"{cartItem.ItemName} - ${cartItem.Price:F2} x{cartItem.Quantity}");
+
+                    MessageBox.Show("Item(s) from your saved list have been added to your cart.",
+                        "Cart Updated", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
         private void btnHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show(
@@ -494,6 +564,7 @@ namespace ThameJordan25SU233x
                 "3) Choose quantity, Add To Cart\n" +
                 "4) Manage your cart (decrease/remove/clear)\n" +
                 "5) Checkout when ready\n\n" +
+                "Favorites:\n- Select a product and click 'Save to Favorites' to save it for later\n- Click 'My Saved Items' to view, add to cart, or request a reorder\n\n" +
                 "Tips:\n- Zero stock items can't be added\n- Review your cart before checkout",
                 "Shopping Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }

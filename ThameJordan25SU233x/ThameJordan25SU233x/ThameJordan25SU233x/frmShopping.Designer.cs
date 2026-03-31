@@ -46,6 +46,8 @@ namespace ThameJordan25SU233x
             this.nudQuantity = new System.Windows.Forms.NumericUpDown();
             this.btnDecreaseQuantity = new System.Windows.Forms.Button();
             this.nudDecrease = new System.Windows.Forms.NumericUpDown();
+            this.btnAddToFavorites = new System.Windows.Forms.Button();
+            this.btnMyFavorites = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvItems)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudQuantity)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudDecrease)).BeginInit();
@@ -191,7 +193,7 @@ namespace ThameJordan25SU233x
             this.btnDecreaseQuantity.Click += new System.EventHandler(this.btnDecreaseQuantity_Click);
             // 
             // nudDecrease
-            // 
+            //
             this.nudDecrease.Location = new System.Drawing.Point(1740, 266);
             this.nudDecrease.Maximum = new decimal(new int[] {
             9999,
@@ -201,7 +203,27 @@ namespace ThameJordan25SU233x
             this.nudDecrease.Name = "nudDecrease";
             this.nudDecrease.Size = new System.Drawing.Size(120, 20);
             this.nudDecrease.TabIndex = 16;
-            // 
+            //
+            // btnAddToFavorites
+            //
+            this.btnAddToFavorites.Location = new System.Drawing.Point(1654, 325);
+            this.btnAddToFavorites.Name = "btnAddToFavorites";
+            this.btnAddToFavorites.Size = new System.Drawing.Size(130, 23);
+            this.btnAddToFavorites.TabIndex = 17;
+            this.btnAddToFavorites.Text = "Save to Favorites";
+            this.btnAddToFavorites.UseVisualStyleBackColor = true;
+            this.btnAddToFavorites.Click += new System.EventHandler(this.btnAddToFavorites_Click);
+            //
+            // btnMyFavorites
+            //
+            this.btnMyFavorites.Location = new System.Drawing.Point(1654, 354);
+            this.btnMyFavorites.Name = "btnMyFavorites";
+            this.btnMyFavorites.Size = new System.Drawing.Size(130, 23);
+            this.btnMyFavorites.TabIndex = 18;
+            this.btnMyFavorites.Text = "My Saved Items";
+            this.btnMyFavorites.UseVisualStyleBackColor = true;
+            this.btnMyFavorites.Click += new System.EventHandler(this.btnMyFavorites_Click);
+            //
             // frmShopping
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -209,6 +231,8 @@ namespace ThameJordan25SU233x
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ClientSize = new System.Drawing.Size(1904, 842);
+            this.Controls.Add(this.btnMyFavorites);
+            this.Controls.Add(this.btnAddToFavorites);
             this.Controls.Add(this.nudDecrease);
             this.Controls.Add(this.btnDecreaseQuantity);
             this.Controls.Add(this.nudQuantity);
@@ -254,5 +278,7 @@ namespace ThameJordan25SU233x
         private NumericUpDown nudQuantity;
         private Button btnDecreaseQuantity;
         private NumericUpDown nudDecrease;
+        private System.Windows.Forms.Button btnAddToFavorites;
+        private System.Windows.Forms.Button btnMyFavorites;
     }
 }
